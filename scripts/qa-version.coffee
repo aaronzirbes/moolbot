@@ -15,7 +15,7 @@ dns = require 'dns'
 
 module.exports = (robot) ->
 
-    robot.respond /(.+ )?app status/i, (msg) ->
+    robot.respond /([a-zA-Z0-9\-]+ )?app status/i, (msg) ->
         host = msg.match[1]
         if host
             hostname = host.trim() + ".moolb.com"
