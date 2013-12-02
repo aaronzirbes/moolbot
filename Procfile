@@ -1,1 +1,1 @@
-web: bin/hubot --adapter hipchat --name Aaron
+web: bin/hubot --adapter hipchat --name Moolbot
