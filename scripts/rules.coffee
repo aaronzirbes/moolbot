@@ -14,8 +14,8 @@ rules = [
   ]
 
 otherRules = [
-  "A developer may not injure Apple or, through inaction, allow Apple to come to harm.",
-  "A developer must obey any orders given to it by Apple, except where such orders would conflict with the First Law.",
+  "A developer may not injure Bloom or, through inaction, allow Bloom to come to harm.",
+  "A developer must obey any orders given to it by Bloom, except where such orders would conflict with the First Law.",
   "A developer must protect its own existence as long as such protection does not conflict with the First or Second Law."
   ]
 
