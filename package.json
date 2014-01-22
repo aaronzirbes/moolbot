@@ -6,7 +6,8 @@
     "github",
     "hubot",
     "campfire",
-    "bot"
+    "bot",
+    "bloom"
   ],
   "description": "A simple helpful robot for your Company",
   "licenses": [
