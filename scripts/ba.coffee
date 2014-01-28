@@ -14,7 +14,7 @@
 
 module.exports = (robot) ->
     robot.respond /ba me (.*)/i, (msg) ->
-        msg.http("http://beeradvocate.com/search")
+        msg.http("http://beeradvocate.com/search/")
             .query
                 qt: "beer"
                 retired: "N"
@@ -30,17 +30,17 @@ module.exports = (robot) ->
                             .get() (err, res, body) ->
 
                                 # get all tds
-                                beer_name = body.match(/<h1>(.+?)<span.+>/)[1]
+                                beer_name = body.match(/<h1>(.+?)<span.+>/)?[1]
                                 tds = body.match(/<td.+>([\s\S]+?)<\/td>/ig)
                                 # ratings_info = tds[3]
                                 
                                 response = beer_name
 
                                 beer_info_td = tds[4]
-                                brewery = beer_info_td.match(/<a href="\/beer\/profile\/.+"><b>(.+?)<\/b>/i)[1]
-                                state = beer_info_td.match(/<a href="\/beerfly\/directory\/.+?">(.+?)<\/a>/i)[1]
-                                country = beer_info_td.match(/<a href="\/beerfly\/directory\/.+">(.+?)<\/a>/i)[1]
-                                style = beer_info_td.match(/<a href="\/beer\/style\/.+"><b>(.+?)<\/b>/i)[1]
+                                brewery = beer_info_td.match(/<a href="\/beer\/profile\/.+"><b>(.+?)<\/b>/i)?[1]
+                                state = beer_info_td.match(/<a href="\/place\/directory\/.+?">(.+?)<\/a>/i)?[1]
+                                country = beer_info_td.match(/<a href="\/place\/directory\/.+">(.+?)<\/a>/i)?[1]
+                                style = beer_info_td.match(/<a href="\/beer\/style\/.+"><b>(.+?)<\/b>/i)?[1]
                                 abv_result = beer_info_td.match(/\| &nbsp;(.+?%)/i)
                                 abv = '?'
                                 if (abv_result != null)
@@ -51,15 +51,15 @@ module.exports = (robot) ->
                                 response += style + " | " + abv + " ABV\n"
 
                                 ba_score_td = tds[1]
-                                ba_score = ba_score_td.match(/<span class="BAscore_big">(.+?)<\/span>/i)[1]
+                                ba_score = ba_score_td.match(/<span class="BAscore_big">(.+?)<\/span>/i)?[1]
                                 response += "BA Score: " + ba_score + "\n"
 
                                 bros_score_td = tds[2]
-                                bros_score = bros_score_td.match(/<span class="BAscore_big">(.+?)<\/span>/i)[1]
+                                bros_score = bros_score_td.match(/<span class="BAscore_big">(.+?)<\/span>/i)?[1]
                                 response += "Bro's Score: " + bros_score
                                 
                                 image_td = tds[0]
-                                image_url = "http://beeradvocate.com" + image_td.match(/<img src="(.+?)"/i)[1]
+                                image_url = "http://beeradvocate.com" + image_td.match(/<img src="(.+?)"/i)?[1]
 
                                 msg.send response
                                 msg.send image_url
