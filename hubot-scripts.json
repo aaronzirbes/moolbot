@@ -1,6 +1,5 @@
 [
   "ackbar.coffee",
-  "auth.coffee",
   "beeradvocate.coffee",
   "brewerydb.coffee",
   "redis-brain.coffee",
