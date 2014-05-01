@@ -160,7 +160,7 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add team tags"
 
-  robot.respond /notify team (["'\w: -_]+) (["'\w: -_]+)/i, (msg) ->
+  robot.respond /notify (["'\w: -_]+) team (["'\w: -_]+)/i, (msg) ->
     team_name = msg.match[1].trim()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
