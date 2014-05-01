@@ -88,7 +88,7 @@ module.exports = (robot) ->
     msg.send "Teams: #{teams.join(", ")}"
 
   robot.respond /create team (["'\w: -_]+)/i, (msg) ->
-    if rrobot.Teams.isFromTeamManager(msg)
+    if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)?
         msg.send "Sorry, team #{team_name} already exists"
