@@ -72,7 +72,7 @@ module.exports = (robot) ->
       return @get(name)?
 
     isFromTeamManager: (msg) ->
-      return robot.Auth.hasRole(msg.message.user.name.toLowerCase(), 'team-manager')
+      return robot.Auth.hasRole(msg.message.user, 'team-manager')
 
   robot.Teams = new Teams
 
