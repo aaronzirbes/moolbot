@@ -5,5 +5,6 @@ deploy:
   provider: heroku
   api_key:
     secure: ZpZoyM7fzdBc44DxN9r1AGLLpjMNlMJy6F7cnt5jj8LgtyfmIOHNgZqeh7EoFX6edLGGodPBley8EXPAbHFEuGrxZqm5pkk54LNDg/DP7riUfdu0NcJhDocElFvhvEaMtaBY61hjuhCQx5R8aikVIEoA95Ci3lXmIS5Um6Q+Q1w=
+  strategy: git
   app: 
     master: calm-harbor-3343
