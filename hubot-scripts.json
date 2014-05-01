@@ -1,6 +1,5 @@
 [
   "ackbar.coffee",
-  "archer.coffee",
   "auth.coffee",
   "beeradvocate.coffee",
   "brewerydb.coffee",
