@@ -132,10 +132,10 @@ module.exports = (robot) ->
 
   robot.respond /(["'\w: -_]+) belongs to the (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[2].trim()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
-        user_name = msg.match[2].trim()
+        user_name = msg.match[1].trim()
         user = robot.brain.userForName(user_name)
         if user?
           team.addMember(user.id)
