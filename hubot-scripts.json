@@ -1,1 +1,9 @@
-["beeradvocate.coffee", "brewerydb.coffee", "redis-brain.coffee", "shipit.coffee"]
+[
+  "ackbar.coffee",
+  "archer.coffee",
+  "auth.coffee",
+  "beeradvocate.coffee",
+  "brewerydb.coffee",
+  "redis-brain.coffee",
+  "shipit.coffee"
+]

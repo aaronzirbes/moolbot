@@ -1,4 +1,3 @@
-
 # Description:
 #   Utility commands surrounding Hubot uptime.
 #
@@ -12,4 +11,3 @@ module.exports = (robot) ->
 
   robot.respond /CASEK$/i, (msg) ->
     msg.send "It's 'Cacek'."
-
