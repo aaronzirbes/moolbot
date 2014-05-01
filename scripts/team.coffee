@@ -56,7 +56,7 @@ module.exports = (robot) ->
     delete: (name) ->
       teams = @teams()
       delete teams[name]
-      update(teams)
+      @update(teams)
 
     get: (name) ->
       teams = @teams()
@@ -90,7 +90,7 @@ module.exports = (robot) ->
   robot.respond /create team (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
-      if robot.Teams.exists(team_name)?
+      if robot.Teams.exists(team_name)
         msg.send "Sorry, team #{team_name} already exists"
       else
         robot.Teams.create(team_name)
