@@ -19,23 +19,25 @@ Util = require "util"
 module.exports = (robot) ->
 
   class Team
-    room: ""
-    members: []
-    tags: []
 
-    constructor: (@name) ->
+    constructor: (options) ->
+      @name = options.name
+      @members = options.members or []
+      @tags = options.tags or []
+      @room = options.room or ""
 
-    addTag: (name) ->
-      @tags.push name
+    addTag: (tag) ->
+      @tags.push(tag)
 
-    addMember: (name) ->
-      @members.push name
+    addMember: (member) ->
+      @members.push(member)
 
-    removeTag: (name) ->
-      @tags = @tags.filter (tag) -> tag isnt name
+    removeTag: (tag) ->
+      @tags = @tags.filter (t) -> t isnt tag
 
-    removeMember: (name) ->
-      @members = @members.filter (member) -> member isnt name
+    removeMember: (member) ->
+      @members = @members.filter (m) -> m isnt member
+
 
   class Teams
     teams: ->
@@ -60,16 +62,25 @@ module.exports = (robot) ->
 
     get: (name) ->
       teams = @teams()
-      teams[name] or null
+      team = teams[name] or null
+      if team?
+        return new Team(teams[name])
+      else
+        return null
 
     create: (name) ->
-      team = new Team(name)
+      team = new Team name: name
       teams = @teams()
       teams[name] = team
       @update(teams)
 
     exists: (name) ->
       return @get(name)?
+
+    save: (team) ->
+      teams = @teams()
+      teams[team.name] = team
+      @update(teams)
 
     isFromTeamManager: (msg) ->
       return robot.Auth.hasRole(msg.message.user.name.toLowerCase(), 'team-manager')
@@ -124,22 +135,24 @@ module.exports = (robot) ->
         team = robot.Teams.get(team_name)
         room = msg.match[2].trim()
         team.room = room
+        robot.Teams.save(team)
         msg.send "Ok, moved #{team_name} to #{room}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
       msg.send "Sorry, only team-manager can add team tags"
 
-  robot.respond /(["'\w: -_]+) belongs to the (["'\w: -_]+) team/i, (msg) ->
+  robot.respond /(["'\w: -_]+) belongs (to|in)( the)? (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[2].trim()
+      team_name = msg.match[4].trim()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         user_name = msg.match[1].trim()
         user = robot.brain.userForName(user_name)
         if user?
           team.addMember(user.id)
-          msg.send "Ok, #{user.name} is now part of #{team_name}"
+          robot.Teams.save(team)
+          msg.send "Ok, #{user.name} [#{user.id}] is now part of #{team_name}"
         else
           msg.send "Sorry, I don't know #{user_name}"
       else
@@ -147,13 +160,23 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add members to teams"
 
-  robot.respond /team (["'\w: -_]+) has tag (["'\w: -_]+)/i, (msg) ->
+  robot.respond /show members? (of|in) (["'\w: -_]+) team/i, (msg) ->
+    team_name = msg.match[2].trim()
+    if robot.Teams.exists(team_name)
+      team = robot.Teams.get(team_name)
+      member_names = (robot.brain.userForId(id).name for id in team.members)
+      msg.send "Team #{team_name}: " + "\n" + member_names.join("\n")
+    else
+      msg.send "Sorry, I couldn't find team #{team_name}"
+
+  robot.respond /tag team (["'\w: -_]+) with (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         tag = msg.match[2].trim()
         team.addTag(tag)
+        robot.Teams.save(team)
         msg.send "Ok, #{team_name} knows about #{tag}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
@@ -181,7 +204,7 @@ module.exports = (robot) ->
       room_name = msg.match[1].trim()
       robot.adapter.connector.getRooms (err, rooms, stanza) =>
         if rooms
-          matching_rooms = room.jid for room in rooms.filter (r) -> r.name is room_name
+          matching_rooms = (room.jid for room in rooms.filter (r) -> r.name is room_name)
           msg.send "#{room_name} could be #{matching_rooms}"
         else
           msg.send "Couldn't find any rooms"
