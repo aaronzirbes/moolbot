@@ -83,7 +83,7 @@ module.exports = (robot) ->
       @update(teams)
 
     isFromTeamManager: (msg) ->
-      return robot.Auth.hasRole(msg.message.user, 'team-manager')
+      return robot.auth.hasRole(msg.envelope.user, 'team-manager')
 
   robot.Teams = new Teams
 
