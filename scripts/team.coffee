@@ -179,9 +179,9 @@ module.exports = (robot) ->
   robot.respond /What is the id for (["'\w: -_]+) room/i, (msg) ->
     if robot.adapterName is "hipchat"
       room_name = msg.match[1].trim()
-      robot.adapter.connector.getRooms(err, rooms, stanza) =>
-        if rooms?
-          matching_rooms = rooms.filter (r) -> r.name is room_name
+      robot.adapter.connector.getRooms (err, rooms, stanza) =>
+        if rooms
+          matching_rooms = room.jid for room in rooms.filter (r) -> r.name is room_name
           msg.send "#{room_name} could be #{matching_rooms}"
         else
           msg.send "Couldn't find any rooms"
