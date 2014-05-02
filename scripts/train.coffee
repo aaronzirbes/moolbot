@@ -25,6 +25,8 @@ trains = [
 
 module.exports = (robot) ->
   robot.hear /(.*)train\b/i, (msg) ->
+    console.log("Received: #{msg.match[1].trim()}")
+    console.log("Eval: #{msg.match[1].trim() not in ['lunch', 'hh']}")
     if (msg.match[1].trim() not in ['lunch', 'hh'])
       msg.send msg.random trains
 
