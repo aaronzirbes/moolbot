@@ -180,12 +180,12 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add members to teams"
 
-  robot.respond /show members? (of|in) (["'\w: -_]+) team/i, (msg) ->
-    team_name = msg.match[2].trim()
+  robot.respond /show member(s)? (of|in) ((?:(?! team$)["'\w: -_])+)( team)?/i, (msg) ->
+    team_name = msg.match[3].trim()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       member_names = (robot.brain.userForId(id).name for id in team.members)
-      msg.send "Team #{team_name}: " + "\n" + member_names.join("\n")
+      msg.send "Team #{team_name} roster: \n" + member_names.join("\n")
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
