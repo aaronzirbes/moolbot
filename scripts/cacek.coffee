@@ -1,5 +1,5 @@
 # Description:
-#   Utility commands surrounding Hubot uptime.
+#   All about Michael.
 #
 # Commands:
 #   hubot cacek - Reply w/ what's up
