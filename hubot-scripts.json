@@ -2,6 +2,7 @@
   "ackbar.coffee",
   "beeradvocate.coffee",
   "brewerydb.coffee",
+  "ping.coffee",
   "redis-brain.coffee",
   "reload.coffee",
   "shipit.coffee"
