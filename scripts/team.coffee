@@ -8,13 +8,24 @@
 #   None
 #
 # Commands:
-#   hubot create team <name> - Creates a team with the name
-#   hubot delete team <name> - Delete a team with the name
-#   hubot show teams         - Show existing teams
+#   hubot delete all teams    - Delete all existing teams
+#   hubot create <name> team  - Creates a team
+#   hubot disband <name> team - Delete a team
+#   hubot show <name> team    - Show information about a team
+#   hubot show teams          - Show existing teams
+#   hubot move <name> team to <room> - Sets the home room for a team
+#   hubot <person> belongs to/in the <name> team - Add a member to a team
+#   hubot show members of/in <name> team - Show the members of a team
+#   hubot <name> team knows about <text> - Tag team with keywords extracted from text
+#   hubot tag <name> team with <tag>     - Explicitly tag a team with a word
+#   hubot notify/tell <name> team <text> - Send a message to a team's home room
+#   hubot what is the id for <room_name> room? - find the HipChat JID for a room
+#   hubot who knows about <text> - find teams that know about something
 # Author:
 #   johnrengelman
 
 Util = require "util"
+Keywords = require "keyword-extractor"
 
 module.exports = (robot) ->
 
@@ -48,9 +59,17 @@ module.exports = (robot) ->
 
     list: ->
       names = []
-      for own team_name, teams of @teams()
+      for own team_name, team of @teams()
         names.push(team_name)
       return names
+
+    find: (filter) ->
+      teams = []
+      for own team_name, team of @teams()
+        if filter(team)
+          console.log("filter returned true")
+          teams.push team
+      return teams
 
     resetAll: ->
       @update({})
@@ -98,7 +117,7 @@ module.exports = (robot) ->
     teams = robot.Teams.list()
     msg.send "Teams: #{teams.join(", ")}"
 
-  robot.respond /create team (["'\w: -_]+)/i, (msg) ->
+  robot.respond /create (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)
@@ -109,7 +128,7 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can create teams."
 
-  robot.respond /delete team (["'\w: -_]+)/i, (msg) ->
+  robot.respond /disband (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)
@@ -120,7 +139,7 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can delete teams."
 
-  robot.respond /show team (["'\w: -_]+)/i, (msg) ->
+  robot.respond /show (["'\w: -_]+) team/i, (msg) ->
     team_name = msg.match[1].trim()
     if robot.Teams.exists(team_name)
       team_info = Util.inspect(robot.Teams.get(team_name), false, 4)
@@ -128,7 +147,7 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
-  robot.respond /team (["'\w: -_]+) lives in (["'\w: -_]+)/i, (msg) ->
+  robot.respond /move (["'\w: -_]+) team to (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)
@@ -136,7 +155,7 @@ module.exports = (robot) ->
         room = msg.match[2].trim()
         team.room = room
         robot.Teams.save(team)
-        msg.send "Ok, moved #{team_name} to #{room}"
+        msg.send "Ok, I moved the #{team_name} team to #{room}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
@@ -169,7 +188,23 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
-  robot.respond /tag team (["'\w: -_]+) with (["'\w: -_]+)/i, (msg) ->
+  robot.respond /(["'\w: -_]+) team knows about (["'\w: -_]+)/i, (msg) ->
+    if robot.Teams.isFromTeamManager(msg)
+      team_name = msg.match[1].trim()
+      if robot.Teams.exists(team_name)
+        team = robot.Teams.get(team_name)
+        tag_text = msg.match[2].trim()
+        tags = Keywords.extract(tag_text, {language: 'english', return_changed_case: true})
+        for tag in tags
+          team.addTag(tag)
+        robot.Teams.save(team)
+        msg.send "Ok, #{team_name} knows about: \n#{tags.join("\n")}"
+      else
+        msg.send "Sorry, I couldn't find team #{team_name}"
+    else
+      msg.send "Sorry, only team-manager can add team tags"
+
+  robot.respond /tag (["'\w: -_]+) team with (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       team_name = msg.match[1].trim()
       if robot.Teams.exists(team_name)
@@ -177,21 +212,21 @@ module.exports = (robot) ->
         tag = msg.match[2].trim()
         team.addTag(tag)
         robot.Teams.save(team)
-        msg.send "Ok, #{team_name} knows about #{tag}"
+        msg.send "Ok, I've tagged #{team_name} with: \n#{tag}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
       msg.send "Sorry, only team-manager can add team tags"
 
-  robot.respond /notify (["'\w: -_]+) team (["'\w: -_]+)/i, (msg) ->
-    team_name = msg.match[1].trim()
+  robot.respond /(notify|tell) (["'\w: -_]+) team (["'\w: -_]+)/i, (msg) ->
+    team_name = msg.match[2].trim()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       if team.room?
-        message = msg.match[2].trim()
+        message = msg.match[3].trim()
         if message?
           robot.messageRoom(team.room, message)
-          msg.send "Ok, I let #{team_name} know."
+          msg.send "Ok, I let #{team_name} know for you."
         else
           msg.send "Silence is deadly. Tell me what to say!"
       else
@@ -199,14 +234,25 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
-  robot.respond /What is the id for (["'\w: -_]+) room/i, (msg) ->
+  robot.respond /What is the id for (the)? (["'\w: -_]+) room/i, (msg) ->
     if robot.adapterName is "hipchat"
-      room_name = msg.match[1].trim()
+      room_name = msg.match[2].trim()
       robot.adapter.connector.getRooms (err, rooms, stanza) =>
         if rooms
           matching_rooms = (room.jid for room in rooms.filter (r) -> r.name is room_name)
-          msg.send "#{room_name} could be #{matching_rooms}"
+          msg.send "#{room_name} could be:\n#{matching_rooms.join("\n")}"
         else
           msg.send "Couldn't find any rooms"
     else
       msg.send "Sorry, I only know how to do this for HipChat"
+
+  robot.respond /who knows about (["'\w: -_]+)/i, (msg) ->
+    text = msg.match[1].trim()
+    keywords = Keywords.extract(text, {language: 'english', return_changed_case: true})
+    intersection = (a, b) ->
+      [a, b] = [b, a] if a.length > b.length
+      value for value in a when value in b
+    team_has_tag = (team) ->
+      return (intersection keywords, team.tags).length > 0
+    teams = robot.Teams.find(team_has_tag)
+    msg.send("You should check with: \n#{(team.name for team in teams).join("\n")}")

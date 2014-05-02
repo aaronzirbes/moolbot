@@ -3,5 +3,6 @@
   "beeradvocate.coffee",
   "brewerydb.coffee",
   "redis-brain.coffee",
+  "reload.coffee",
   "shipit.coffee"
 ]
