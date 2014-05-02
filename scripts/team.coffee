@@ -120,7 +120,7 @@ module.exports = (robot) ->
 
   robot.respond /create (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[1].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         msg.send "Sorry, team #{team_name} already exists"
       else
@@ -131,7 +131,7 @@ module.exports = (robot) ->
 
   robot.respond /disband (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[1].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         robot.Teams.delete(team_name)
         msg.send "Deleted team #{team_name}."
@@ -141,7 +141,7 @@ module.exports = (robot) ->
       msg.send "Sorry, only team-manager can delete teams"
 
   robot.respond /show (["'\w: -_]+) team/i, (msg) ->
-    team_name = msg.match[1].trim()
+    team_name = msg.match[1].trim().toLowerCase()
     if robot.Teams.exists(team_name)
       team_info = Util.inspect(robot.Teams.get(team_name), false, 4)
       msg.send "Team: #{team_name}" + "\n" + team_info
@@ -150,13 +150,14 @@ module.exports = (robot) ->
 
   robot.respond /move (["'\w: -_]+) team to (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[1].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         room = msg.match[2].trim()
         team.room = room
         robot.Teams.save(team)
-        msg.send "Ok, I moved the #{team_name} team to #{room}"
+        msg.send "Ok, I moved the #{team.name} team to #{room}"
+        robot.messageRoom(room, "#{team.name} has moved in.")
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
@@ -164,7 +165,7 @@ module.exports = (robot) ->
 
   robot.respond /(["'\w: -_]+) belongs (to|in)( the)? (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[4].trim()
+      team_name = msg.match[4].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         user_name = msg.match[1].trim()
@@ -172,7 +173,7 @@ module.exports = (robot) ->
         if user?
           team.addMember(user.id)
           robot.Teams.save(team)
-          msg.send "Ok, #{user.name} [#{user.id}] is now part of #{team_name}"
+          msg.send "Ok, #{user.name} [#{user.id}] is now part of #{team.name}"
         else
           msg.send "Sorry, I don't know #{user_name}"
       else
@@ -181,17 +182,17 @@ module.exports = (robot) ->
       msg.send "Sorry, only team-manager can add members to teams"
 
   robot.respond /show member(s)? (of|in) ((?:(?! team$)["'\w: -_])+)( team)?/i, (msg) ->
-    team_name = msg.match[3].trim()
+    team_name = msg.match[3].trim().toLowerCase()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       member_names = (robot.brain.userForId(id).name for id in team.members)
-      msg.send "Team #{team_name} roster: \n" + member_names.join("\n")
+      msg.send "Team #{team.name} roster: \n" + member_names.join("\n")
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
   robot.respond /(["'\w: -_]+) team knows about (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[1].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         tag_text = msg.match[2].trim()
@@ -199,7 +200,7 @@ module.exports = (robot) ->
         for tag in tags
           team.addTag(tag)
         robot.Teams.save(team)
-        msg.send "Ok, #{team_name} knows about: \n#{tags.join("\n")}"
+        msg.send "Ok, #{team.name} knows about: \n#{tags.join("\n")}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
@@ -207,31 +208,31 @@ module.exports = (robot) ->
 
   robot.respond /tag (["'\w: -_]+) team with (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[1].trim()
+      team_name = msg.match[1].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         tag = msg.match[2].trim()
         team.addTag(tag)
         robot.Teams.save(team)
-        msg.send "Ok, I've tagged #{team_name} with: \n#{tag}"
+        msg.send "Ok, I've tagged #{team.name} with: \n#{tag}"
       else
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
       msg.send "Sorry, only team-manager can add team tags"
 
   robot.respond /(notify|tell) (["'\w: -_]+) team (that )?(["'\w: -_]+)/i, (msg) ->
-    team_name = msg.match[2].trim()
+    team_name = msg.match[2].trim().toLowerCase()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       if team.room?
         message = msg.match[4].trim()
         if message?
           robot.messageRoom(team.room, message)
-          msg.send "Ok, I let #{team_name} know for you."
+          msg.send "Ok, I let #{team.name} know for you."
         else
           msg.send "Silence is deadly. Tell me what to say!"
       else
-        msg.send "Sorry, #{team_name} is off the grid"
+        msg.send "Sorry, #{team.name} is off the grid"
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
