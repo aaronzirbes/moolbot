@@ -51,62 +51,47 @@ module.exports = (robot) ->
 
 
   class Teams
-    teams: ->
-      return robot.brain.get("teams") or {}
-
-    update: (teams) ->
-      robot.brain.set("teams", teams)
+    allTeams: ->
+      return robot.brain.data.teams
 
     list: ->
-      names = []
-      for own team_name, team of @teams()
-        names.push(team_name)
-      return names
+      return (name for own name, team of @allTeams())
 
     find: (filter) ->
-      teams = []
-      for own team_name, team of @teams()
-        if filter(team)
-          console.log("filter returned true")
-          teams.push team
-      return teams
+      return for own name, team of @allTeams() when filter(team)
 
     resetAll: ->
-      @update({})
+      robot.brain.data.teams = {}
 
     delete: (name) ->
-      teams = @teams()
-      delete teams[name.toLowerCase()]
-      @update(teams)
+      delete robot.brain.data.teams[name.toLowerCase()]
 
     get: (name) ->
-      teams = @teams()
-      team = teams[name.toLowerCase()] or null
-      if team?
-        return new Team(teams[name.toLowerCase()])
-      else
-        return null
+      return robot.brain.data.teams[name.toLowerCase()]
 
     create: (name) ->
       team = new Team name: name.toLowerCase()
-      teams = @teams()
-      teams[name.toLowerCase()] = team
-      @update(teams)
+      robot.brain.data.teams[name.toLowerCase()] = team
       return team
 
     exists: (name) ->
       return @get(name)?
 
     save: (team) ->
-      teams = @teams()
-      teams[team.name] = team
-      @update(teams)
+      robot.brain.data.teams[team.name.toLowerCase()] = team
 
     isFromTeamManager: (msg) ->
       return robot.auth.hasRole(msg.envelope.user, 'team-manager')
 
   robot.Teams = new Teams
 
+  robot.brain.on 'loaded', =>
+      robot.brain.data.teams ||= {}
+
+  robot.respond /migrate teams/i, (msg) ->
+    robot.brain.data.teams = robot.brain.get("teams")
+    delete robot.brain.removes("teams")
+    
   robot.respond /delete all teams/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       robot.Teams.resetAll()
@@ -181,6 +166,25 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add members to teams"
 
+  robot.respond /(["'\w: -_]+) quits the (["'\w: -_]+) team/i, (msg) ->
+    if robot.Teams.isFromTeamManager(msg)
+      team_name = msg.match[2].trim().toLowerCase()
+      if robot.Teams.exists(team_name)
+        team = robot.Teams.get(team_name)
+        user_name = msg.match[1].trim()
+        user = robot.brain.userForName(user_name)
+        if user?
+          team.removeMember(user.id)
+          robot.Teams.save(team)
+          msg.send "Ok, #{user.name} [#{user.id}] left #{team.name}."
+          msg.send "We're sad to see #{user.name} go...tear."
+        else
+          msg.send "Sorry, I don't know #{user_name}"
+      else
+        msg.send "Sorry, I couldn't find team #{team_name}"
+    else
+      msg.send "Sorry, only team-manager can remove members from teams"
+
   robot.respond /show member(s)? (of|in) ((?:(?! team$)["'\w: -_])+)( team)?/i, (msg) ->
     team_name = msg.match[3].trim().toLowerCase()
     if robot.Teams.exists(team_name)
@@ -205,6 +209,22 @@ module.exports = (robot) ->
         msg.send "Sorry, I couldn't find team #{team_name}"
     else
       msg.send "Sorry, only team-manager can add team tags"
+
+  robot.respond /(["'\w: -_]+) team forgot about (["'\w: -_]+)/i, (msg) ->
+    if robot.Teams.isFromTeamManager(msg)
+      team_name = msg.match[1].trim().toLowerCase()
+      if robot.Teams.exists(team_name)
+        team = robot.Teams.get(team_name)
+        tag_text = msg.match[2].trim()
+        tags = Keywords.extract(tag_text, {language: 'english', return_changed_case: true})
+        for tag in tags
+          team.removeTag(tag)
+        robot.Teams.save(team)
+        msg.send "Ok, I wiped #{team.name}'s memories about: \n#{tags.join("\n")}"
+      else
+        msg.send "Sorry, I couldn't find team #{team_name}"
+    else
+      msg.send "Sorry, only team-manager can remove team tags"
 
   robot.respond /tag (["'\w: -_]+) team with (["'\w: -_]+)/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)

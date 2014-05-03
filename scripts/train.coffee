@@ -24,6 +24,7 @@ trains = [
 ]
 
 module.exports = (robot) ->
+
   robot.hear /(lunch )?(hh )?train\b/i, (msg) ->
     if not msg.match[1] and not msg.match[2]
       msg.send msg.random trains

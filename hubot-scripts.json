@@ -1,9 +1,17 @@
 [
   "ackbar.coffee",
+  "applause.coffee",
+  "ascii.coffee",
   "beeradvocate.coffee",
   "brewerydb.coffee",
+  "dealwithit.coffee",
+  "facepalm.coffee",
+  "haters.coffee",
+  "mitch-hedberg.coffee",
   "ping.coffee",
   "redis-brain.coffee",
   "reload.coffee",
+  "remind.coffee",
+  "sensitive.coffee",
   "shipit.coffee"
 ]
