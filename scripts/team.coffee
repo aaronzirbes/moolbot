@@ -67,7 +67,8 @@ module.exports = (robot) ->
       delete robot.brain.data.teams[name.toLowerCase()]
 
     get: (name) ->
-      return robot.brain.data.teams[name.toLowerCase()]
+      team = robot.brain.data.teams[name.toLowerCase()]
+      return new Team(team) || null
 
     create: (name) ->
       team = new Team name: name.toLowerCase()
@@ -144,9 +145,9 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add team tags"
 
-  robot.respond /(["'\w: -_]+) belongs (to|in)( the)? (["'\w: -_]+) team/i, (msg) ->
+  robot.respond /(["'\w: -_]+) belongs (?:to|in)(?: the)? (["'\w: -_]+) team/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
-      team_name = msg.match[4].trim().toLowerCase()
+      team_name = msg.match[2].trim().toLowerCase()
       if robot.Teams.exists(team_name)
         team = robot.Teams.get(team_name)
         user_name = msg.match[1].trim()
@@ -181,8 +182,8 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can remove members from teams"
 
-  robot.respond /show member(s)? (of|in) ((?:(?! team$)["'\w: -_])+)( team)?/i, (msg) ->
-    team_name = msg.match[3].trim().toLowerCase()
+  robot.respond /show member(?:s)? (?:of|in) ((?:(?! team$)["'\w: -_])+)(?: team)?/i, (msg) ->
+    team_name = msg.match[1].trim().toLowerCase()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       member_names = (robot.brain.userForId(id).name for id in team.members)
@@ -236,12 +237,12 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, only team-manager can add team tags"
 
-  robot.respond /(notify|tell) (["'\w: -_]+) team (that )?(["'\w: -_]+)/i, (msg) ->
-    team_name = msg.match[2].trim().toLowerCase()
+  robot.respond /(?:notify|tell) (["'\w: -_]+) team (?:that )?(["'\w: -_]+)/i, (msg) ->
+    team_name = msg.match[1].trim().toLowerCase()
     if robot.Teams.exists(team_name)
       team = robot.Teams.get(team_name)
       if team.room?
-        message = msg.match[4].trim()
+        message = msg.match[2].trim()
         if message?
           robot.messageRoom(team.room, message)
           msg.send "Ok, I let #{team.name} know for you."
@@ -252,9 +253,9 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, I couldn't find team #{team_name}"
 
-  robot.respond /what is the id for( the)? (["'\w: -_]+) room/i, (msg) ->
+  robot.respond /what is the id for(?: the)? (["'\w: -_]+) room/i, (msg) ->
     if robot.adapterName is "hipchat"
-      room_name = msg.match[2].trim()
+      room_name = msg.match[1].trim()
       robot.adapter.connector.getRooms (err, rooms, stanza) =>
         if rooms
           matching_rooms = (room.jid for room in rooms.filter (r) -> r.name is room_name)
@@ -264,8 +265,8 @@ module.exports = (robot) ->
     else
       msg.send "Sorry, I only know how to do this for HipChat"
 
-  robot.respond /who knows (about )?(["'\w: -_]+)/i, (msg) ->
-    text = msg.match[2].trim()
+  robot.respond /who knows (?:about )?(["'\w: -_]+)/i, (msg) ->
+    text = msg.match[1].trim()
     keywords = Keywords.extract(text, {language: 'english', return_changed_case: true})
     intersection = (a, b) ->
       [a, b] = [b, a] if a.length > b.length
