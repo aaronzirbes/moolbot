@@ -88,10 +88,6 @@ module.exports = (robot) ->
   robot.brain.on 'loaded', =>
       robot.brain.data.teams ||= {}
 
-  robot.respond /migrate teams/i, (msg) ->
-    robot.brain.data.teams = robot.brain.get("teams")
-    delete robot.brain.removes("teams")
-    
   robot.respond /delete all teams/i, (msg) ->
     if robot.Teams.isFromTeamManager(msg)
       robot.Teams.resetAll()
