@@ -58,7 +58,7 @@ module.exports = (robot) ->
       return (name for own name, team of @allTeams())
 
     find: (filter) ->
-      return for own name, team of @allTeams() when filter(team)
+      return (team for own name, team of @allTeams() when filter(team))
 
     resetAll: ->
       robot.brain.data.teams = {}
@@ -272,7 +272,7 @@ module.exports = (robot) ->
       [a, b] = [b, a] if a.length > b.length
       value for value in a when value in b
     team_has_tag = (team) ->
-      return (intersection keywords, team.tags).length > 0
+      return (intersection(keywords, team.tags)).length > 0
     teams = robot.Teams.find(team_has_tag)
     if teams.length > 0
       msg.send "You should check with: \n#{(team.name for team in teams).join("\n")}"
