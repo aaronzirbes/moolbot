@@ -20,6 +20,7 @@ module.exports = (robot) ->
   class Cacek
     constructor: (options) ->
       @max = options.max or 100
+      @default = options.default or 25
       @min = 0
       @rooms = []
 
@@ -27,21 +28,23 @@ module.exports = (robot) ->
       @rooms = []
 
     reset: (msg) ->
-      @rooms[msg.envelope.room] = @min
+      @rooms[msg.envelope.room] = @default
 
     inc: (msg) ->
-        current = @rooms[msg.envelope.room] || @min
-        @rooms[msg.envelope.room] = ++current
+        current = @rooms[msg.envelope.room] || @default
+        if current < @max
+          @rooms[msg.envelope.room] = ++current
 
     dec: (msg) ->
-        current = @rooms[msg.envelope.room] || @min
-        @rooms[msg.envelope.room] = --current
+        current = @rooms[msg.envelope.room] || @default
+        if current > @min
+          @rooms[msg.envelope.room] = --current
 
     test: (msg) ->
-      current = @rooms[msg.envelope.room] || @min
+      current = @rooms[msg.envelope.room] || @default
       Math.random() < (current / @max)
 
-  robot.cacek = new Cacek([])
+  robot.cacek = new Cacek({})
 
   robot.respond /reset all cacek/i, (msg) ->
     robot.cacek.resetAll()
