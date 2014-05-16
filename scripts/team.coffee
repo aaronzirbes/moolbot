@@ -21,6 +21,7 @@
 #   hubot notify/tell <name> team <text> - Send a message to a team's home room
 #   hubot what is the id for <room_name> room? - find the HipChat JID for a room
 #   hubot who knows about <text> - find teams that know about something
+#
 # Author:
 #   johnrengelman
 
