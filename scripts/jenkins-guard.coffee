@@ -22,22 +22,29 @@ module.exports = (robot) ->
     auth = process.env.JENKINS_AUTH
 
   robot.hear /FAILURE .* href="http:\/\/(.*?)"/, (msg) ->
+    console.log("Detected build error for [#{msg.match[1]}] from [#{msg.envelope.user.id.toString()}][#{jenkins}]")
     if msg.envelope.user.id.toString() in jenkins
+      console.log("Processing for Jenkins user.")
       job_info = "http://"
       if auth
         job_info += (auth + '@')
       job_info += "#{msg.match[1]}api/json"
       msg.http(job_info)
         .get() (err, res, body) ->
+          if err
+            console.log("HTTP error: #{err}")
+            return
           try
             json = JSON.parse(body)
             culprits = (culprit.fullName for culprit in json.culprits)
+            console.log("Attempting to alert culprits [#{culprits}]")
             for culprit in culprits
               user = robot.brain.userForName(culprit)
               if not user
                 console.log("Could not find user for [#{culprit}]")
                 msg.send("Can't notify culprit [#{culprit}]")
               else
-                msg.send(user, "Hey jerk, looks like you may have had a hand in breaking a build: http://#{msg.match[1]}")
+                console.log("Alerting [#{user}]")
+                msg.send(user, "Hey buddy, looks like you may have had a hand in breaking a build: http://#{msg.match[1]}")
           catch error
             console.log("error parsing #{body}")
