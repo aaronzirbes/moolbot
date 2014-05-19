@@ -21,6 +21,9 @@ module.exports = (robot) ->
   if process.env.JENKINS_AUTH?
     auth = process.env.JENKINS_AUTH
 
+  robot.hear /(?:FAILURE|Success)/i, (msg) ->
+    console.log("Message from Jenkins: #{msg.message.text}")
+
   robot.hear /FAILURE .*?http:\/\/(.*?(\/?))(?:'|\s|$)/i, (msg) ->
     console.log("Detected build error for [#{msg.match[1]}] from [#{msg.envelope.user.id.toString()}][#{jenkins}]")
     if msg.envelope.user.id.toString() in jenkins
