@@ -25,7 +25,7 @@ module.exports = (robot) ->
     console.log("Message from Jenkins: #{msg.message.text}")
 
   robot.hear /FAILURE\b.*?http:\/\/(.*?(\/?))(?:'|"|\s|$)/i, (msg) ->
-    console.log("Detected build error for [#{msg.match[1]}] from [#{msg.envelope.user.id.toString()}][#{jenkins}]")
+    console.log("Detected build error for [#{msg.match[1]}]")
     if msg.envelope.user.id.toString() in jenkins
       console.log("Processing for Jenkins user.")
       job_info = "http://"
@@ -49,7 +49,7 @@ module.exports = (robot) ->
                 console.log("Could not find user for [#{culprit}]")
                 msg.send("Can't notify culprit [#{culprit}]")
               else
-                console.log("Alerting [#{user}]")
-                msg.send(user, "Hey buddy, looks like you may have had a hand in breaking a build: http://#{msg.match[1]}")
+                console.log("Alerting [#{user.name}]")
+                robot.send(user, "Hey buddy, looks like you may have had a hand in breaking a build: http://#{msg.match[1]}")
           catch error
             console.log("error parsing #{body}")
