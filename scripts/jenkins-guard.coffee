@@ -21,14 +21,16 @@ module.exports = (robot) ->
   if process.env.JENKINS_AUTH?
     auth = process.env.JENKINS_AUTH
 
-  robot.hear /FAILURE .* href="http:\/\/(.*?)"/, (msg) ->
+  robot.hear /FAILURE .*?http:\/\/(.*?(\/?))(?:'|\s|$)/i, (msg) ->
     console.log("Detected build error for [#{msg.match[1]}] from [#{msg.envelope.user.id.toString()}][#{jenkins}]")
     if msg.envelope.user.id.toString() in jenkins
       console.log("Processing for Jenkins user.")
       job_info = "http://"
       if auth
         job_info += (auth + '@')
-      job_info += "#{msg.match[1]}api/json"
+      job_info += "#{msg.match[1]}"
+      job_info += "/" unless msg.match[2]
+      job_info += "api/json"
       msg.http(job_info)
         .get() (err, res, body) ->
           if err
